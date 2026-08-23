@@ -52,14 +52,6 @@ C2=tA1%*%B1+tA2%*%B2+tA3%*%B3
 C2
 ```
 
-## Eigenvectors of a Jordan Matrix
-
-Computes the eigenvalues and eigenvectors of a 2-by-2 Jordan matrix.
-
-```{webr}
-J=matrix(c(1,0,1,1),2,2)
-eigen(J)
-```
 
 ## Eigenvalues Before and After Inversion
 
