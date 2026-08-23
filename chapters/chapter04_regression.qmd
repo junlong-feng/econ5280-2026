@@ -78,27 +78,4 @@ ttest1=model$coefficient[2]/sqrt(cov[2,2]) # denominator is the corresponding se
 coeftest(model,vcov.=vcovHC(model,type="HC0"))
 ```
 
-## HC1-Robust Confidence Interval
 
-Simulates heteroskedastic outcomes and reports an HC1 coefficient table and 95% confidence interval for x1.
-
-```{webr}
-library(sandwich)
-library(lmtest)
-
-set.seed(5280)
-n <- 500
-x1 <- rnorm(n)
-x2 <- rnorm(n)
-y <- 0.5 + x1 + x2 + rnorm(n, sd = 0.5 + abs(x1))
-fit <- lm(y ~ x1 + x2)
-
-# HC1 heteroskedasticity-robust covariance matrix and coefficient table
-V_HC1 <- vcovHC(fit, type = "HC1")
-coeftest(fit, vcov. = V_HC1)
-
-# A 95% robust confidence interval for the coefficient on x1
-b1 <- coef(fit)["x1"]
-se1 <- sqrt(V_HC1["x1", "x1"])
-b1 + c(-1, 1) * qnorm(0.975) * se1
-```
