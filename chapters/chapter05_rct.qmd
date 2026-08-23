@@ -1,0 +1,122 @@
+---
+title: "Chapter 5: Randomized Controlled Trials"
+author: "Junlong Feng"
+format:
+  live-html:
+    toc: true
+    toc-depth: 2
+resources:
+  - ../data/welfare-small.csv
+webr:
+  resources:
+    - ../data/welfare-small.csv
+  packages:
+    - sandwich
+    - lmtest
+---
+
+## Welfare Experiment: Difference in Means and OLS
+
+Loads the welfare survey experiment and estimates the wording effect by difference in means and OLS.
+
+```{webr}
+library(lmtest)
+library(sandwich)
+# Read in data
+data <- read.csv("data/welfare-small.csv")
+n <- nrow(data)
+
+# The difference-in-means estimator
+Y=data$Y
+D=data$D
+tau_dm=mean(Y[D==1])-mean(Y[D==0])
+
+# The least-squares estimator
+model=lm(Y~D)
+coeftest(model,vcov=vcovHC(model,type='HC2'))
+```
+
+## Covariate-Adjusted Welfare Estimate
+
+Reestimates the welfare wording effect after adding six observed covariates.
+
+```{webr}
+# Regress Y on D and W
+model1=lm(Y~D+age+polviews+income+educ+marital+sex,data)
+coeftest(model1,vcov=vcovHC(model1,type='HC2'))
+```
+
+## Fully Interacted Welfare Estimate
+
+Centers the six covariates and fits a treatment-by-covariate interacted regression.
+
+```{webr}
+covariates <- c("age", "polviews", "income", "educ", "marital", "sex")
+data_centered <- data
+data_centered[covariates] <- lapply(data[covariates], function(x) x - mean(x))
+model_interacted <- lm(
+  Y~D*(age+polviews+income+educ+marital+sex),
+  data=data_centered
+)
+coeftest(model_interacted,vcov=vcovHC(model_interacted,type='HC2'))
+```
+
+## Monte Carlo: Difference in Means versus Adjustment
+
+Simulates 100 samples and compares the means and variances of unadjusted and covariate-adjusted estimates.
+
+```{webr}
+library(lmtest)
+library(sandwich)
+# Fix sample size = 1000
+n=1000
+
+# 100 simulation replications
+B=100
+
+# for replication
+set.seed(5280)
+
+# Store the estimates
+tau_dm=0
+tau_ols=0
+
+# Loop over all simulated samples
+for (b in 1:B){
+		w=rnorm(n,2,1) # create W; here the mean is not 0
+		e=rnorm(n,0,1) # create the error term
+		d=(rnorm(n,0,1)>0) # create a binary treatment
+		y=1+d+w^2*d+exp(w)+e # true model. W does not enter the model linearly
+		model1=lm(y~d) # dm estimator
+		tau_dm[b]=model1$coefficients[2]
+		model2=lm(y~d+w) # regression adjustment
+		tau_ols[b]=model2$coefficients[2]
+}
+# examine the mean and variance
+mean(tau_dm)
+mean(tau_ols)
+var(tau_dm)
+var(tau_ols)
+```
+
+## Monte Carlo: Fully Interacted Adjustment
+
+Repeats the simulation with centered treatment-by-covariate interactions and reports the estimate's mean and variance.
+
+```{webr}
+# Added fully interacted regression adjustment
+set.seed(5280)
+tau_interacted=0
+
+for (b in 1:B){
+		w=rnorm(n,2,1)
+		e=rnorm(n,0,1)
+		d=(rnorm(n,0,1)>0)
+		y=1+d+w^2*d+exp(w)+e
+		w_centered=w-mean(w)
+		model3=lm(y~d*w_centered)
+		tau_interacted[b]=model3$coefficients[2]
+}
+mean(tau_interacted)
+var(tau_interacted)
+```

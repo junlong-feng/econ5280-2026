@@ -1,0 +1,88 @@
+---
+title: "Chapter 6: Causal Forest"
+author: "Junlong Feng"
+format:
+  live-html:
+    toc: true
+    toc-depth: 2
+resources:
+  - ../data/welfare-small.csv
+execute:
+  enabled: false
+engine: markdown
+---
+
+## Causal Forest with Simulated Data
+
+Simulates heterogeneous effects and plots estimated CATEs, pointwise intervals, and the known CATE.
+
+```{r}
+library(grf)
+library(DiagrammeR)
+### Generate data. You do not need to run these if a dataset is already given. 
+n <- 2000      
+p <- 10
+W <- matrix(rnorm(n * p), n, p)
+D <- rbinom(n, 1, 0.4 + 0.2 * (W[, 1] > 0))
+Y <- pmax(W[, 1], 0) * D + W[, 2] + pmin(W[, 3], 0) + rnorm(n)
+data=data.frame(Y,D,W)
+
+## Generate values of interest for w
+W.test <- matrix(0, 101, p)
+W.test[, 1] <- seq(-2, 2, length.out = 101)
+
+### Build a causal forest.
+tau.forest <- causal_forest(W, Y, D) # Put regressors
+tree <- get_tree(tau.forest, 1)
+plot(tree) # visualize the first tree in the forest
+
+### Estimate CATE at specified w values using the forest
+tau.hat <- predict(tau.forest, W.test) 
+plot(W.test[, 1], tau.hat$predictions, ylim = range(tau.hat$predictions, 0, 2), 
+     xlab = "W1", ylab = "CATE", type = "l") # estimated CATE
+lines(W.test[, 1], pmax(0, W.test[, 1]), col = 2, lty = 2) # true CATE
+
+# Estimate treatment effects with pointwise confidence intervals
+tau.forest <- causal_forest(W, Y, D, num.trees = 4000)
+tau.hat <- predict(tau.forest, W.test, estimate.variance = TRUE)
+sigma.hat <- sqrt(tau.hat$variance.estimates)
+plot(W.test[, 1], tau.hat$predictions, ylim =
+       range(tau.hat$predictions + 1.96 * sigma.hat, 
+             tau.hat$predictions - 1.96 * sigma.hat, 0, 2), 
+     xlab = "W1", ylab = "CATE", type = "l")
+lines(W.test[, 1], tau.hat$predictions + 1.96 * sigma.hat, col = 1, lty = 2)
+lines(W.test[, 1], tau.hat$predictions - 1.96 * sigma.hat, col = 1, lty = 2)
+lines(W.test[, 1], pmax(0, W.test[, 1]), col = 2, lty = 1)
+```
+
+## Welfare CATEs by Education
+
+Fits a causal forest to welfare-small.csv and plots CATE estimates across education at age 30.
+
+```{r}
+data <- read.csv("data/welfare-small.csv")
+n <- nrow(data)
+Y=as.numeric(data$Y)
+D=as.numeric(data$D)
+W=cbind(data$age,data$educ)
+
+
+## Generate values of interest for w
+W.test <- cbind(30,seq(min(data$educ),max(data$educ),by=1))
+
+### Build a causal forest.
+tau.forest <- causal_forest(W, Y, D) # Put regressors
+tree <- get_tree(tau.forest, 1)
+plot(tree) # visualize the first tree in the forest
+
+# Estimate treatment effects with pointwise confidence intervals
+tau.forest <- causal_forest(W, Y, D, num.trees = 4000)
+tau.hat <- predict(tau.forest, W.test, estimate.variance = TRUE)
+sigma.hat <- sqrt(tau.hat$variance.estimates)
+plot(W.test[, 2], tau.hat$predictions, ylim =
+       range(tau.hat$predictions + 1.96 * sigma.hat, 
+             tau.hat$predictions - 1.96 * sigma.hat), 
+     xlab = "educ", ylab = "CATE", type = "l")
+lines(W.test[, 2], tau.hat$predictions + 1.96 * sigma.hat, col = 1, lty = 2)
+lines(W.test[, 2], tau.hat$predictions - 1.96 * sigma.hat, col = 1, lty = 2)
+```

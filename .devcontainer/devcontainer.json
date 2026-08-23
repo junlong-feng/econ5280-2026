@@ -1,0 +1,33 @@
+{
+  "name": "ECON 5280 Applied Econometrics",
+  "image": "ghcr.io/rocker-org/devcontainer/r-ver:4.5",
+  "features": {
+    "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": {
+      "version": "1.10.18"
+    },
+    "ghcr.io/rocker-org/devcontainer-features/r-packages:1": {
+      "packages": "grf,DiagrammeR,did,fixest,lmtest,sandwich,knitr,rmarkdown,languageserver,httpgd",
+      "installSystemRequirements": true
+    }
+  },
+  "postCreateCommand": "Rscript scripts/test_native_runtime.R",
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "8gb",
+    "storage": "16gb"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "REditorSupport.r",
+        "quarto.quarto"
+      ],
+      "settings": {
+        "r.alwaysUseActiveTerminal": true,
+        "r.bracketedPaste": true,
+        "r.plot.useHttpgd": true
+      }
+    }
+  },
+  "remoteUser": "vscode"
+}

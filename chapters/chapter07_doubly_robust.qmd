@@ -1,0 +1,57 @@
+---
+title: "Chapter 7: Doubly Robust Learning"
+author: "Junlong Feng"
+format:
+  live-html:
+    toc: true
+    toc-depth: 2
+execute:
+  enabled: false
+engine: markdown
+---
+
+## OLS and the Simulated ATE
+
+Simulates nonlinear treatment effects and compares two robust OLS estimates with the true ATE of 2.
+
+```{r}
+library(lmtest)
+library(sandwich)
+set.seed(5280)
+## DGP
+n=5000
+w=rnorm(n,0,1)
+v=rnorm(n,0,1)
+d=((w+v)>0) ## So the treatment satisfies unconfoundedness but not complete randomization
+e=rnorm(n,0,1)
+y=1+d+w+d*w^2+sin(w)+e  ## So, ATE=2
+
+## OLS
+model1=lm(y~d)
+model2=lm(y~d+w)
+coeftest(model1,vcov.=vcovHC(model1,type="HC0"))
+coeftest(model2,vcov.=vcovHC(model2,type="HC0"))
+```
+
+## Causal-Forest AIPW Estimate
+
+Fits a causal forest and reports its AIPW estimate of the simulated ATE.
+
+```{r}
+library(grf)
+library(DiagrammeR)
+### Generate data. 
+set.seed(5280)
+n <- 2000      
+p <- 10
+W <- matrix(rnorm(n * p), n, p)
+D <- rbinom(n, 1, 0.4 + 0.2 * (W[, 1] > 0))
+Y <- pmax(W[, 1], 0) * D + W[, 2] + pmin(W[, 3], 0) + rnorm(n)
+data=data.frame(Y,D,W)
+
+# Plant a forest
+tau.forest <- causal_forest(W, Y, D, num.trees = 4000)
+
+# Estimate the ATE
+average_treatment_effect(tau.forest,target.sample="all",method="AIPW")
+```

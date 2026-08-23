@@ -1,0 +1,58 @@
+---
+title: "Chapter 9: Instrumental Variables and LATE"
+author: "Junlong Feng"
+format:
+  live-html:
+    toc: true
+    toc-depth: 2
+webr:
+  packages:
+    - ivreg
+---
+
+## LATE, Wald, and IV Estimates
+
+Simulates compliance types, calculates the Wald estimate, and compares IV with OLS.
+
+```{webr}
+library(ivreg)
+
+set.seed(5280)
+n <- 4000
+Z <- rbinom(n, 1, 0.5)
+type <- sample(
+  c("never", "complier", "always"),
+  n,
+  replace = TRUE,
+  prob = c(0.25, 0.55, 0.20)
+)
+
+D0 <- as.integer(type == "always")
+D1 <- as.integer(type %in% c("complier", "always"))
+D <- ifelse(Z == 1, D1, D0)
+
+U <- rnorm(n)
+tau <- 1 + 0.7 * (type == "complier") + 0.4 * U
+Y0 <- 0.5 + U + rnorm(n)
+Y <- Y0 + D * tau
+
+table(type, Z, D)
+
+outcome_itt <- mean(Y[Z == 1]) - mean(Y[Z == 0])
+first_stage <- mean(D[Z == 1]) - mean(D[Z == 0])
+wald <- outcome_itt / first_stage
+true_late <- mean(tau[type == "complier"])
+
+c(
+  outcome_itt = outcome_itt,
+  first_stage = first_stage,
+  wald = wald,
+  true_late = true_late
+)
+
+fit_iv <- ivreg(Y ~ D | Z)
+fit_ols <- lm(Y ~ D)
+
+summary(fit_iv, diagnostics = TRUE)
+summary(fit_ols)
+```

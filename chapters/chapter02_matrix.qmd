@@ -1,0 +1,79 @@
+---
+title: "Chapter 2: Matrix Algebra"
+author: "Junlong Feng"
+format:
+  live-html:
+    toc: true
+    toc-depth: 2
+webr:
+  packages:
+    - Matrix
+---
+
+## Rank and Invertibility of a Tall Matrix
+
+Builds a 3-by-2 matrix, checks the ranks of A, A'A, and AA', and attempts both inverses.
+
+```{webr}
+library(Matrix)
+
+A_tall <- matrix(c(1, 0, 1, 0, 1, 1), nrow = 3, ncol = 2)
+c(rank_A = rankMatrix(A_tall),
+  rank_AtA = rankMatrix(t(A_tall) %*% A_tall),
+  rank_AAt = rankMatrix(A_tall %*% t(A_tall)))
+
+solve(t(A_tall) %*% A_tall)       # exists
+try(solve(A_tall %*% t(A_tall)))  # singular
+```
+
+## Three Ways to Compute A'B
+
+Constructs two 3-by-2 matrices and computes A'B directly, entry by entry, and as a sum of row outer products.
+
+```{webr}
+A=matrix(c(1,2,3,4,5,6),3,2)
+B=matrix(c(2,3,4,5,6,7),3,2)
+## 1. Calculate AB by R
+t(A)%*%B
+## 2. Representation 1
+C1=matrix(0,2,2)
+for (i in 1:2){
+  for (j in 1:2){
+    C1[i,j]=sum(A[,i]*B[,j])
+  }
+}
+C1
+## 3. Representation 2
+C2=matrix(0,2,2)
+tA1=matrix(A[1,],2,1);tA2=matrix(A[2,],2,1)
+tA3=matrix(A[3,],2,1);B1=matrix(B[1,],1,2)
+B2=matrix(B[2,],1,2);B3=matrix(B[3,],1,2)
+C2=tA1%*%B1+tA2%*%B2+tA3%*%B3
+C2
+```
+
+## Eigenvectors of a Jordan Matrix
+
+Computes the eigenvalues and eigenvectors of a 2-by-2 Jordan matrix.
+
+```{webr}
+J=matrix(c(1,0,1,1),2,2)
+eigen(J)
+```
+
+## Eigenvalues Before and After Inversion
+
+Computes the rank and eigenpairs of a symmetric matrix and compares them with the eigenpairs of its inverse.
+
+```{webr}
+library(Matrix)
+X=matrix(c(2,1,1,2),2,2) # you can try a matrix that is not full rank
+ed=eigen(X) # spectral decomposition
+rankMatrix(X) # calculate the rank; need package "Matrix"
+ed$values # call eigenvalues
+ed$vectors # call eigenvectors
+Xinv=solve(X) # taking inverse of a matrix
+edinv=eigen(Xinv)
+edinv$values
+edinv$vectors # eigenvectors are the same as X up to permutation and sign change.
+```

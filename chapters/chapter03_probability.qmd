@@ -1,0 +1,164 @@
+---
+title: "Chapter 3: Probability"
+author: "Junlong Feng"
+format:
+  live-html:
+    toc: true
+    toc-depth: 2
+webr:
+  packages:
+    - ggplot2
+    - latex2exp
+    - ggpointdensity
+    - mvtnorm
+    - plotly
+    - weights
+    - scales
+---
+
+## Three Normal Density Curves
+
+Plots normal densities with different means and standard deviations on one graph.
+
+```{webr}
+library(ggplot2)
+library(latex2exp)
+library(ggpointdensity)
+
+## Normal densities
+x=seq(-7,7,length=100)
+f1=dnorm(x,mean=0,sd=1)
+f2=dnorm(x,mean=2,sd=1)
+f3=dnorm(x,mean=0,sd=2)
+
+## Put the three density function values and x into a dataset
+data=data.frame(f1=f1,f2=f2,f3=f3,x=x)
+
+## Plot the three densities in one graph.
+p=ggplot(data=data)+
+  geom_line(aes(x=x,y=f1,colour="N(0,1)"))+
+  geom_line(aes(x=x,y=f2,colour="N(2,1)"),linetype="dashed")+
+  geom_line(aes(x=x,y=f3,colour="N(0,4)"),linetype="dotdash")+
+  xlab('x')+
+  ylab('density')+
+  labs(colour="Legend")+
+  theme(
+    legend.position = c(.95, .95),
+    legend.justification = c("right", "top"),
+    legend.box.just = "right",
+    legend.margin = margin(6, 6, 6, 6)
+  )
+p
+```
+
+## Joint-Normal Density Surfaces
+
+Creates three-dimensional density surfaces for independent, positively correlated, and negatively correlated bivariate normals.
+
+```{webr}
+library(ggplot2)
+library(mvtnorm)
+library(plotly)
+library(latex2exp)
+library(ggpointdensity)
+library(weights)
+
+x=seq(-4,4,length=100)
+y=seq(-4,4,length=100)
+## A joint normal distribution can be fully characterized by mean, variance, and covariances
+sigma_pos=matrix(c(1,0.5,0.5,1),ncol=2) # X and Y positively correlated
+sigma_neg=matrix(c(1,-0.5,-0.5,1),ncol=2) # X and Y negatively correlated
+sigma_ind=matrix(c(1,0,0,1),ncol=2) # X and Y independent
+mu=c(0,0) # mean
+
+f_pos=function(x,y){dmvnorm(cbind(x,y),mu,sigma_pos)}
+f_neg=function(x,y){dmvnorm(cbind(x,y),mu,sigma_neg)}
+f_ind=function(x,y){dmvnorm(cbind(x,y),mu,sigma_ind)}
+z_pos=outer(x,y,f_pos)
+z_neg=outer(x,y,f_neg)
+z_ind=outer(x,y,f_ind)
+pp_pos=plot_ly(x=x,y=y,z=z_pos)%>% add_surface()
+pp_neg=plot_ly(x=x,y=y,z=z_neg)%>% add_surface()
+pp_ind=plot_ly(x=x,y=y,z=z_ind)%>% add_surface()
+pp_ind
+# pp_neg
+# pp_pos
+```
+
+## Sample Averages and Normal Approximation
+
+Simulates Bernoulli sample averages over several sample sizes and plots their concentration and standardized distributions.
+
+```{webr}
+library(scales)
+library(ggplot2)
+library(mvtnorm)
+library(latex2exp)
+library(ggpointdensity)
+library(weights)
+## WLLN
+set.seed(12)
+e=0.1
+m=0
+n=0
+  for (b in 1:200){
+      m[1+10*(b-1)]=mean(rbinom(10,1,0.5))
+      m[2+10*(b-1)]=mean(rbinom(20,1,0.5))
+      m[3+10*(b-1)]=mean(rbinom(30,1,0.5))
+      m[4+10*(b-1)]=mean(rbinom(40,1,0.5))
+      m[5+10*(b-1)]=mean(rbinom(50,1,0.5))
+      m[6+10*(b-1)]=mean(rbinom(60,1,0.5))
+      m[7+10*(b-1)]=mean(rbinom(70,1,0.5))
+      m[8+10*(b-1)]=mean(rbinom(80,1,0.5))
+      m[9+10*(b-1)]=mean(rbinom(90,1,0.5))
+      m[10+10*(b-1)]=mean(rbinom(100,1,0.5))
+         
+      n[1+10*(b-1)]=10
+      n[2+10*(b-1)]=20
+      n[3+10*(b-1)]=30
+      n[4+10*(b-1)]=40
+      n[5+10*(b-1)]=50
+      n[6+10*(b-1)]=60
+      n[7+10*(b-1)]=70
+      n[8+10*(b-1)]=80
+      n[9+10*(b-1)]=90
+      n[10+10*(b-1)]=100
+      
+}
+data1=data.frame(m=m,n=n)
+data2=data1[order(n),]
+mm=data2$m
+prop=0
+for (i in 1:10){
+  prop[i]=sum((abs(mm[(1+200*(i-1)):(200+200*(i-1))]-0.5)<e))/200
+}
+#name=paste0("Pr(|μ-0.5|<ε)=",prop,", n=",n)
+name=paste0("Pr=",prop,", n=",n)
+datap=data.frame(data1,name)
+datap=datap[order(n),]
+
+## Figure 1 for WLLN
+ggplot(data1,aes(n,m))+geom_bin2d()+scale_fill_gradient(low = "#efedf5", high = "#756bb1",trans="log10")+
+scale_x_continuous(breaks = seq(0, 100, 10))+
+  geom_hline(yintercept = 0.4,linetype="dashed")+
+  geom_hline(yintercept = 0.6,linetype="dashed")+labs(colour=TeX('$|\\bar{X}-0.5|\\leq\\epsilon$'))+ylab("Sample averages")
+
+## Figure 2 for WLLN
+ggplot(datap, aes(n, m)) +geom_bin2d()+scale_fill_gradient(low = "#efedf5", high = "#756bb1",trans="log10")+
+  facet_wrap(~name, ncol=5)+geom_hline(yintercept = 0.4,linetype="dashed")+
+  scale_x_continuous(breaks = seq(0, 100, 20))+
+  geom_hline(yintercept = 0.6,linetype="dashed")+labs(colour=TeX('$|\\bar{X}-0.5|\\leq\\epsilon$'))+ylab("Sample averages")
+
+### CLT
+namen=paste0("n=",n)
+data3=data.frame(data1,namen) # passed to geom_histogram and stat_function
+data3$m=sqrt(data3$n)*(data3$m-0.5)/0.5
+data3$namen=factor(data3$namen,levels=c("n=10","n=20","n=30","n=40","n=50","n=60","n=70","n=80","n=90","n=100"))
+ggplot(data3, aes(m, color=namen)) +
+  theme_bw() +
+  geom_histogram(aes(y=..density..), binwidth = 0.5,
+                 color="white",fill = "#cdc7e0", size = 1) +
+  stat_function(fun = function(x) dnorm(x, mean = 0, sd = 1),
+                color = "gray61", size = 1)+
+  facet_wrap(~namen, ncol=5)+xlab(TeX('$\\frac{\\sqrt{n}(\\bar{X}-\\mu_{X})}{\\sigma_{X}}$'))
+```

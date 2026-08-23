@@ -1,0 +1,162 @@
+{
+  "course": "ECON 5280: Applied Econometrics",
+  "policy": "Only original numerical R examples and concise descriptions appear on chapter pages.",
+  "pages": [
+    {
+      "file": "chapters/chapter01_intro.qmd",
+      "title": "Chapter 1: Introduction",
+      "sources": [
+        "chapters/chapter01_intro.md"
+      ],
+      "runtime": "webr",
+      "block_count": 1,
+      "sha256": [
+        "1d023c37e33ece5844cdc02b8a7e342623d8d7e4633a69760d7680328f5ad6ba"
+      ]
+    },
+    {
+      "file": "chapters/chapter02_matrix.qmd",
+      "title": "Chapter 2: Matrix Algebra",
+      "sources": [
+        "chapters/chapter02_matrix.md",
+        "appendices/appendix_matrix.md"
+      ],
+      "runtime": "webr",
+      "block_count": 4,
+      "sha256": [
+        "874ab484638535bf2d1dc01e797ee5835d5f2480d72c0c6bf42868ce7ddec78b",
+        "ed0e2a6c00aeb5f39e32b89160152fc6ccb28f9977b0c5318d7571fa9e40fd3e",
+        "2d7f0c991445812083653e823abfa95c6d7b6014e6a34d9f7d0239e3519b0185",
+        "76d463a7767b0460bc4ea67264f32efa1ea284ca1d3f9a1e856a30730170a019"
+      ]
+    },
+    {
+      "file": "chapters/chapter03_probability.qmd",
+      "title": "Chapter 3: Probability",
+      "sources": [
+        "chapters/chapter03_probability.md",
+        "appendices/appendix_probability.md"
+      ],
+      "runtime": "webr",
+      "block_count": 3,
+      "sha256": [
+        "2113ca0e9a675d1c91874e923f91430ab9d6310fb7bfc35899e41196814fceb8",
+        "a828dc8f04a45deb95fab23505953564b9752906dd87a989852444e7ed98543d",
+        "83f19208517141b9d2db6f4086a4128b18a85b24697eef7ea40717044bc2d23c"
+      ]
+    },
+    {
+      "file": "chapters/chapter04_regression.qmd",
+      "title": "Chapter 4: Statistics and Regression",
+      "sources": [
+        "chapters/chapter04_regression.md"
+      ],
+      "runtime": "webr",
+      "block_count": 5,
+      "sha256": [
+        "00ef6932071ffe89373f1e6fd9f738a4059ab1ed18e571c6431d7a7af973de81",
+        "287c6779e057cfee2c6793c63ae9bf43e535f2b39e9dabf6f9d44e3fc130e09b",
+        "3c3ac7418594878495d50344559ed0cd51cd693e4f54377004865b8ebb247015",
+        "3f44feed84014f0d10afea66a6254158c52c88313bb67468231b41e18c245655",
+        "cf46baed6c98f215690ede1e9b92265b2d4283ffed56bfc77420c584e8a366df"
+      ]
+    },
+    {
+      "file": "chapters/chapter05_rct.qmd",
+      "title": "Chapter 5: Randomized Controlled Trials",
+      "sources": [
+        "chapters/chapter05_rct.md"
+      ],
+      "runtime": "webr",
+      "block_count": 5,
+      "sha256": [
+        "0c58ed81eb6d23eb7e55a4974d5437f14833ef65eff4b0036fa0eec6d46462f3",
+        "da140769937bf2b442685170f842529224bf16ee46f785d7631b29f74921f2d4",
+        "7dd8444fa4b2218ad903e9bff338f170952293aa5bc6dd16315043b8d253a9f0",
+        "6fbb030f3c2848f489be91cc53b555d7d5ef3bf811a7c2f7f95b868bba121973",
+        "d717401405dcf944cabb41bf6e0ae7756781325939b46d8a07b0689c80c9a44a"
+      ]
+    },
+    {
+      "file": "chapters/chapter06_causal_forest.qmd",
+      "title": "Chapter 6: Causal Forest",
+      "sources": [
+        "chapters/chapter06_causal_forest.md"
+      ],
+      "runtime": "native",
+      "block_count": 2,
+      "sha256": [
+        "dd78a6beeafd6f0b029e51654a09f9293d9d6cace8ed49fa03012395c6e280db",
+        "1c59fd8c72f9393ad34e04e05b02a168faa8cd46d1fc49f4d4b246769bc78acd"
+      ]
+    },
+    {
+      "file": "chapters/chapter07_doubly_robust.qmd",
+      "title": "Chapter 7: Doubly Robust Learning",
+      "sources": [
+        "chapters/chapter07_doubly_robust.md"
+      ],
+      "runtime": "native",
+      "block_count": 2,
+      "sha256": [
+        "44141a59de225354d2a5ebfcab10b2fc8f27fc243984d835e804ab47096ae558",
+        "ffaa5a2d394c8ad9a1868021e8c14ab2b44ae7e24751495c4fd51738a1c074c7"
+      ]
+    },
+    {
+      "file": "chapters/chapter08_rd.qmd",
+      "title": "Chapter 8: Regression Discontinuity",
+      "sources": [
+        "chapters/chapter08_rd.md"
+      ],
+      "runtime": "webr",
+      "block_count": 2,
+      "sha256": [
+        "1a90d27be8fc1d0aab34e43dde2fef37408d2cb490a59a28af3040a9a9006f06",
+        "5f866a463531c888d6cdd830c79a9198d6715b3cad667459987a080050a2d60f"
+      ]
+    },
+    {
+      "file": "chapters/chapter09_late.qmd",
+      "title": "Chapter 9: Instrumental Variables and LATE",
+      "sources": [
+        "chapters/chapter09_late.md"
+      ],
+      "runtime": "webr",
+      "block_count": 1,
+      "sha256": [
+        "869160be01c458d1f508f97d497bc31bd56720ec514d1ee4d8bad2734ab45515"
+      ]
+    },
+    {
+      "file": "chapters/chapter10_nn.qmd",
+      "title": "Chapter 10: Neural Networks",
+      "sources": [
+        "chapters/chapter10_nn.md"
+      ],
+      "runtime": "webr",
+      "block_count": 3,
+      "sha256": [
+        "26158f2242585b4ab93f8d55533fca7165fe1966b155f1709e5ae3e23c43f6b6",
+        "53e33c17d818419e7177c1cdeb83ed6e9d6a9e8c38739dce74a8948766250a80",
+        "8d7de700cdea9d6cc479c5bde884c13e166ab27dffb085664dc3969201807905"
+      ]
+    },
+    {
+      "file": "chapters/chapter11_did.qmd",
+      "title": "Chapter 11: Difference-in-Differences and Event Studies",
+      "sources": [
+        "chapters/chapter11_did.md"
+      ],
+      "runtime": "native",
+      "block_count": 5,
+      "sha256": [
+        "4e10a5dfb5df032147e515379d6b5048baf5b76684a0ca176d038cc4cc1d5927",
+        "4cd54e58e6e47333fcadf06509c8e9af5c5f62e17bf84d242d3be10d2aab9b8b",
+        "a953766f144eb1814ff9016e16f69dcf5118166cc79bade3de87ef1c9005a23d",
+        "a8c96c9f830c98c7799bd4484df456b4315d9cc63fea4008cd6361d4c25f2192",
+        "389484944b8d123287476c7713b7631fa7876fdccf098bb395479e0039dad62f"
+      ]
+    }
+  ]
+}

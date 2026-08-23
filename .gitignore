@@ -1,0 +1,14 @@
+# Rendered Quarto site
+/.quarto/
+/_site/
+/site_libs/
+/*_files/
+/chapters/*_files/
+/chapters/*.html
+/appendices/*_files/
+/appendices/*.html
+
+# Local validation and editor files
+/scripts/__pycache__/
+.DS_Store
+*.swp

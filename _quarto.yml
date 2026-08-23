@@ -1,0 +1,33 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "ECON 5280: Applied Econometrics"
+  page-navigation: true
+  sidebar:
+    style: docked
+    search: true
+    contents:
+      - index.qmd
+      - section: "Numerical Examples"
+        contents:
+          - chapters/chapter01_intro.qmd
+          - chapters/chapter02_matrix.qmd
+          - chapters/chapter03_probability.qmd
+          - chapters/chapter04_regression.qmd
+          - chapters/chapter05_rct.qmd
+          - chapters/chapter06_causal_forest.qmd
+          - chapters/chapter07_doubly_robust.qmd
+          - chapters/chapter08_rd.qmd
+          - chapters/chapter09_late.qmd
+          - chapters/chapter10_nn.qmd
+          - chapters/chapter11_did.qmd
+
+format:
+  live-html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    number-sections: false
+    code-copy: true

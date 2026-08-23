@@ -1,0 +1,141 @@
+---
+title: "Chapter 11: Difference-in-Differences and Event Studies"
+author: "Junlong Feng"
+format:
+  live-html:
+    toc: true
+    toc-depth: 2
+execute:
+  enabled: false
+engine: markdown
+---
+
+## Simulated Staggered-Adoption Panel
+
+Generates treatment cohorts with effects that vary by cohort and exposure length.
+
+```{r}
+set.seed(5280)
+N <- 600
+TT <- 10
+
+units <- data.frame(
+  id = 1:N,
+  G = sample(c(0, 4, 6, 8), N, replace = TRUE,
+             prob = c(0.30, 0.25, 0.25, 0.20)),
+  alpha = rnorm(N),
+  W = rnorm(N)
+)
+
+data <- merge(expand.grid(id = 1:N, t = 1:TT), units,
+              by = "id", sort = TRUE)
+data$D <- as.integer(data$G > 0 & data$t >= data$G)
+data$event_time <- ifelse(data$G > 0, data$t - data$G, NA)
+
+data$cohort_scale <- ifelse(data$G == 4, 1.50,
+                     ifelse(data$G == 6, 1.00,
+                     ifelse(data$G == 8, 0.60, 0)))
+data$tau <- ifelse(data$D == 1,
+                   data$cohort_scale * (1 + 0.5 * data$event_time), 0)
+
+data$lambda <- 0.25 * data$t + 0.03 * data$t^2
+data$Y0 <- data$alpha + data$lambda + 0.5 * data$W +
+           rnorm(nrow(data))
+data$Y <- data$Y0 + data$tau
+```
+
+## One Group-Time DID by Hand
+
+Calculates the group-4, period-6 DID and compares it with the known simulated effect.
+
+```{r}
+simple_att_gt <- function(data, g, t) {
+  stopifnot(t >= g)
+  base <- g - 1
+
+  now <- data[data$t == t, c("id", "G", "Y")]
+  names(now)[names(now) == "Y"] <- "Y_now"
+  before <- data[data$t == base, c("id", "Y")]
+  names(before)[names(before) == "Y"] <- "Y_before"
+
+  change <- merge(now, before, by = "id")
+  change$dY <- change$Y_now - change$Y_before
+  treated <- change$G == g
+  controls <- change$G == 0 | change$G > t
+
+  mean(change$dY[treated]) - mean(change$dY[controls])
+}
+
+simple_att_gt(data, g = 4, t = 6)
+mean(data$tau[data$G == 4 & data$t == 6])
+```
+
+## Callaway-Sant'Anna Group-Time Effects
+
+Estimates and plots group-time effects with bootstrap confidence bands.
+
+```{r}
+library(did)
+
+att <- att_gt(
+  yname = "Y", tname = "t", idname = "id", gname = "G",
+  xformla = ~ 1, data = data, panel = TRUE,
+  control_group = "notyettreated", est_method = "dr",
+  base_period = "universal", clustervars = "id",
+  bstrap = TRUE, cband = TRUE,
+  biters = 199                 # short classroom demonstration only
+)
+
+summary(att)
+ggdid(att)
+```
+
+## Aggregate DID Effects
+
+Reports overall, cohort, dynamic, and balanced dynamic aggregations.
+
+```{r}
+overall <- aggte(att, type = "simple")
+by_group <- aggte(att, type = "group")
+dynamic <- aggte(att, type = "dynamic", min_e = -3, max_e = 4)
+
+summary(overall)
+summary(by_group)
+summary(dynamic)
+ggdid(dynamic)
+
+dynamic_balanced <- aggte(
+  att, type = "dynamic",
+  min_e = -3, max_e = 3,
+  balance_e = 3
+)
+summary(dynamic_balanced)
+ggdid(dynamic_balanced)
+```
+
+## TWFE versus Sun-Abraham Event Studies
+
+Fits and plots conventional TWFE and interaction-weighted event-study estimates.
+
+```{r}
+library(fixest)
+
+data$ever_treated <- as.integer(data$G > 0)
+data$event_twfe <- ifelse(data$G > 0, data$t - data$G, 0)
+
+twfe_event <- feols(
+  Y ~ i(event_twfe, ever_treated, ref = -1) | id + t,
+  data = data, cluster = ~ id
+)
+
+# A cohort outside the observed period range is treated as never treated.
+data$G_sunab <- ifelse(data$G == 0, 1000, data$G)
+sa_event <- feols(
+  Y ~ sunab(G_sunab, t, ref.p = -1) | id + t,
+  data = data, cluster = ~ id
+)
+
+iplot(list("Conventional TWFE" = twfe_event,
+           "Sun--Abraham" = sa_event),
+      ref.line = -1, main = "Event-study estimates")
+```

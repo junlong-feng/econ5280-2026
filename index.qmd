@@ -1,0 +1,12 @@
+---
+title: "ECON 5280: Applied Econometrics"
+subtitle: "Interactive numerical examples"
+author: "Junlong Feng"
+format:
+  live-html:
+    toc: false
+---
+
+This companion contains only the numerical examples from the lecture notes, each with a short description.
+
+Most examples run directly in the browser. Chapters 6, 7, and 11 use the repository's GitHub Codespace.

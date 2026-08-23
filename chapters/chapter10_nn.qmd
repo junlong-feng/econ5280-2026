@@ -1,0 +1,80 @@
+---
+title: "Chapter 10: Neural Networks"
+author: "Junlong Feng"
+format:
+  live-html:
+    toc: true
+    toc-depth: 2
+webr:
+  packages:
+    - nnet
+---
+
+## Sigmoid Approximation to the Maximum
+
+Compares a sigmoid calculation with the maximum over all four binary input pairs.
+
+```{webr}
+sigmoid <- function(z) 1 / (1 + exp(-z))
+
+grid <- expand.grid(x1 = c(0, 1), x2 = c(0, 1))
+grid$truth <- pmax(grid$x1, grid$x2)
+grid$network <- with(grid, sigmoid(-20 + 40 * x1 + 40 * x2))
+grid
+```
+
+## Neural Network versus Linear Model
+
+Fits both models to a nonlinear simulated outcome and compares held-out mean squared errors.
+
+```{webr}
+library(nnet)
+
+set.seed(5280)
+n <- 700
+W1 <- runif(n, -1, 1)
+W2 <- runif(n, -1, 1)
+m <- sin(pi * W1) + W2^2
+Y <- m + rnorm(n, sd = 0.25)
+
+train <- sample(seq_len(n), 500)
+dat <- data.frame(Y, W1, W2)
+
+fit_nn <- nnet(
+  Y ~ W1 + W2,
+  data = dat[train, ],
+  size = 8,
+  linout = TRUE,
+  decay = 0.01,
+  maxit = 500,
+  trace = FALSE
+)
+fit_lm <- lm(Y ~ W1 + W2, data = dat[train, ])
+
+test <- setdiff(seq_len(n), train)
+pred_nn <- predict(fit_nn, dat[test, ])
+pred_lm <- predict(fit_lm, dat[test, ])
+
+c(
+  neural_net = mean((Y[test] - pred_nn)^2),
+  linear_model = mean((Y[test] - pred_lm)^2)
+)
+```
+
+## Predictions along One Slice
+
+Plots the true conditional mean and both fitted predictions while holding W2 at 0.5.
+
+```{webr}
+slice <- data.frame(W1 = seq(-1, 1, length.out = 150), W2 = 0.5)
+slice$truth <- with(slice, sin(pi * W1) + W2^2)
+slice$neural_net <- predict(fit_nn, slice)
+slice$linear_model <- predict(fit_lm, slice)
+
+plot(slice$W1, slice$truth, type = "l", lwd = 3,
+     xlab = "W1 (holding W2 = 0.5)", ylab = "Conditional mean")
+lines(slice$W1, slice$neural_net, col = 2, lwd = 2)
+lines(slice$W1, slice$linear_model, col = 4, lwd = 2, lty = 2)
+legend("topleft", c("Truth", "Neural net", "Linear model"),
+       col = c(1, 2, 4), lwd = c(3, 2, 2), lty = c(1, 1, 2), bty = "n")
+```

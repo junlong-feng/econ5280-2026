@@ -1,0 +1,49 @@
+---
+title: "Chapter 8: Regression Discontinuity"
+author: "Junlong Feng"
+format:
+  live-html:
+    toc: true
+    toc-depth: 2
+resources:
+  - house.csv
+webr:
+  engine-url: https://webr.r-wasm.org/v0.5.9/
+  resources:
+    - house.csv
+  packages:
+    - rdd
+---
+
+## Sharp RDD with Simulated Data
+
+Simulates a discontinuity at zero and compares default and customized local-linear RDD estimates.
+
+```{webr}
+library(rdd)
+
+## DGP
+x<-runif(1000,-1,1)
+y<-3+2*x+10*(x>=0)+rnorm(1000)
+
+## Estimation; the default bandwidth is IK and kernel is triangular. You can specify them by "bw=" and "kernel="
+## If you want to add covariates (cov), then write RDestimate(y~x|cov). 
+model1=RDestimate(y~x) 
+model2=RDestimate(y~x,bw=c(0.1,0.2,0.3),kernel="gaussian")
+summary(model1)
+summary(model2)
+plot(model1)
+```
+
+## House Elections RDD
+
+Loads house.csv and estimates the electoral discontinuity with local-linear regression.
+
+```{webr}
+library(rdd)
+data=read.csv("house.csv")
+y=data$y
+x=data$x
+model=RDestimate(y~x)
+summary(model)
+```
