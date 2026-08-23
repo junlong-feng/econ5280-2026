@@ -141,13 +141,13 @@ datap=datap[order(n),]
 ggplot(data1,aes(n,m))+geom_bin2d()+scale_fill_gradient(low = "#efedf5", high = "#756bb1",trans="log10")+
 scale_x_continuous(breaks = seq(0, 100, 10))+
   geom_hline(yintercept = 0.4,linetype="dashed")+
-  geom_hline(yintercept = 0.6,linetype="dashed")+labs(colour=TeX('$|\\bar{X}-0.5|\\leq\\epsilon$'))+ylab("Sample averages")
+  geom_hline(yintercept = 0.6,linetype="dashed")+ylab("Sample averages")
 
 ## Figure 2 for WLLN
 ggplot(datap, aes(n, m)) +geom_bin2d()+scale_fill_gradient(low = "#efedf5", high = "#756bb1",trans="log10")+
   facet_wrap(~name, ncol=5)+geom_hline(yintercept = 0.4,linetype="dashed")+
   scale_x_continuous(breaks = seq(0, 100, 20))+
-  geom_hline(yintercept = 0.6,linetype="dashed")+labs(colour=TeX('$|\\bar{X}-0.5|\\leq\\epsilon$'))+ylab("Sample averages")
+  geom_hline(yintercept = 0.6,linetype="dashed")+ylab("Sample averages")
 
 ### CLT
 namen=paste0("n=",n)
@@ -160,5 +160,5 @@ ggplot(data3, aes(m, color=namen)) +
                  color="white",fill = "#cdc7e0", linewidth = 1) +
   stat_function(fun = function(x) dnorm(x, mean = 0, sd = 1),
                 color = "gray61", linewidth = 1)+
-  facet_wrap(~namen, ncol=5)+xlab(TeX('$\\frac{\\sqrt{n}(\\bar{X}-\\mu_{X})}{\\sigma_{X}}$'))
+  facet_wrap(~namen, ncol=5)+xlab(latex2exp::TeX('$\\frac{\\sqrt{n}(\\bar{X}-\\mu_{X})}{\\sigma_{X}}$'))
 ```
