@@ -121,10 +121,10 @@ Tn_1=(b1-b_h0_1)/se1
 Tn_2=(b1-b_h0_2)/se1
 
 # Size
-rej1[j]=(abs(Tn_1)>qnorm(0.975))
+rej_1[j]=(abs(Tn_1)>qnorm(0.975))
 
 # Power
-rej2[j]=(abs(Tn_2)>qnorm(0.975))
+rej_2[j]=(abs(Tn_2)>qnorm(0.975))
 
 # 0.95 Confidence interval
 CI_lower=b1 - qnorm(0.975) * se1
@@ -132,8 +132,8 @@ CI_upper=b1 + qnorm(0.975) * se1
 
 cover[j]=(1<=CI_upper)*(1>=CI_lower)
 }
-mean(rej1)
-mean(rej2)
+mean(rej_1)
+mean(rej_2)
 mean(cover)
 ```
 
