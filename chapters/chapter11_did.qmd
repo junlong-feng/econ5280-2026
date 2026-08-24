@@ -12,7 +12,7 @@ engine: markdown
 
 ## Simulated Staggered-Adoption Panel
 
-Generates treatment cohorts with effects that vary by cohort and exposure length.
+Generates persistent, temporary, and delayed treatment effects across cohorts.
 
 ```{r}
 set.seed(5280)
@@ -32,16 +32,39 @@ data <- merge(expand.grid(id = 1:N, t = 1:TT), units,
 data$D <- as.integer(data$G > 0 & data$t >= data$G)
 data$event_time <- ifelse(data$G > 0, data$t - data$G, NA)
 
-data$cohort_scale <- ifelse(data$G == 4, 1.50,
-                     ifelse(data$G == 6, 1.00,
-                     ifelse(data$G == 8, 0.60, 0)))
-data$tau <- ifelse(data$D == 1,
-                   data$cohort_scale * (1 + 0.5 * data$event_time), 0)
+# Strongly heterogeneous treatment-effect paths:
+# G = 4: persistent; G = 6: temporary; G = 8: delayed.
+data$tau <- 0
+data$tau[data$G == 4 & data$D == 1] <- 10
+data$tau[data$G == 6 & data$D == 1 & data$event_time <= 1] <- 10
+data$tau[data$G == 8 & data$D == 1 & data$event_time >= 2] <- 10
 
 data$lambda <- 0.25 * data$t + 0.03 * data$t^2
 data$Y0 <- data$alpha + data$lambda + 0.5 * data$W +
            rnorm(nrow(data))
 data$Y <- data$Y0 + data$tau
+
+# Known effects from the data-generating process.
+true_gt <- aggregate(
+  tau ~ G + t + event_time,
+  data = data[data$G > 0, ],
+  FUN = mean
+)
+names(true_gt)[names(true_gt) == "tau"] <- "true_effect"
+
+true_event <- aggregate(
+  tau ~ event_time,
+  data = data[data$G > 0, ],
+  FUN = mean
+)
+names(true_event)[names(true_event) == "tau"] <- "true_effect"
+
+cohort_n <- table(units$G)
+true_effects_by_cohort <- true_gt[
+  true_gt$t >= true_gt$G,
+  c("G", "event_time", "true_effect")
+]
+print(true_effects_by_cohort, digits = 4, row.names = FALSE)
 ```
 
 ## One Group-Time DID by Hand
@@ -66,8 +89,14 @@ simple_att_gt <- function(data, g, t) {
   mean(change$dY[treated]) - mean(change$dY[controls])
 }
 
-simple_att_gt(data, g = 4, t = 6)
-mean(data$tau[data$G == 4 & data$t == 6])
+hand_comparison <- data.frame(
+  estimand = "ATT(4,6)",
+  estimate = simple_att_gt(data, g = 4, t = 6),
+  true_effect = mean(data$tau[data$G == 4 & data$t == 6])
+)
+hand_comparison$estimation_error <-
+  hand_comparison$estimate - hand_comparison$true_effect
+print(hand_comparison, digits = 4, row.names = FALSE)
 ```
 
 ## Callaway-Sant'Anna Group-Time Effects
@@ -87,6 +116,22 @@ att <- att_gt(
 )
 
 summary(att)
+
+att_truth <- data.frame(
+  group = att$group,
+  period = att$t,
+  event_time = att$t - att$group,
+  estimate = att$att
+)
+att_truth$true_effect <- true_gt$true_effect[
+  match(
+    paste(att_truth$group, att_truth$period),
+    paste(true_gt$G, true_gt$t)
+  )
+]
+att_truth$estimation_error <- att_truth$estimate - att_truth$true_effect
+print(att_truth, digits = 4, row.names = FALSE)
+
 ggdid(att)
 ```
 
@@ -99,9 +144,73 @@ overall <- aggte(att, type = "simple")
 by_group <- aggte(att, type = "group")
 dynamic <- aggte(att, type = "dynamic", min_e = -3, max_e = 4)
 
+true_group <- aggregate(
+  tau ~ G,
+  data = data[data$D == 1, ],
+  FUN = mean
+)
+names(true_group)[names(true_group) == "tau"] <- "true_effect"
+true_group$weight <- as.numeric(
+  cohort_n[as.character(true_group$G)]
+)
+
+simple_comparison <- data.frame(
+  estimand = "Simple overall ATT",
+  estimate = overall$overall.att,
+  true_effect = mean(data$tau[data$D == 1])
+)
+simple_comparison$estimation_error <-
+  simple_comparison$estimate - simple_comparison$true_effect
+
+group_comparison <- data.frame(
+  group = by_group$egt,
+  estimate = by_group$att.egt
+)
+group_comparison$true_effect <- true_group$true_effect[
+  match(group_comparison$group, true_group$G)
+]
+group_comparison$estimation_error <-
+  group_comparison$estimate - group_comparison$true_effect
+
+group_overall_comparison <- data.frame(
+  estimand = "Group-weighted overall ATT",
+  estimate = by_group$overall.att,
+  true_effect = weighted.mean(true_group$true_effect, true_group$weight)
+)
+group_overall_comparison$estimation_error <-
+  group_overall_comparison$estimate - group_overall_comparison$true_effect
+
+dynamic_comparison <- data.frame(
+  event_time = dynamic$egt,
+  estimate = dynamic$att.egt
+)
+dynamic_comparison$true_effect <- true_event$true_effect[
+  match(dynamic_comparison$event_time, true_event$event_time)
+]
+dynamic_comparison$estimation_error <-
+  dynamic_comparison$estimate - dynamic_comparison$true_effect
+
+dynamic_overall_comparison <- data.frame(
+  estimand = "Dynamic overall ATT",
+  estimate = dynamic$overall.att,
+  true_effect = mean(dynamic_comparison$true_effect[
+    dynamic_comparison$event_time >= 0
+  ])
+)
+dynamic_overall_comparison$estimation_error <-
+  dynamic_overall_comparison$estimate -
+  dynamic_overall_comparison$true_effect
+
 summary(overall)
+print(simple_comparison, digits = 4, row.names = FALSE)
+
 summary(by_group)
+print(group_comparison, digits = 4, row.names = FALSE)
+print(group_overall_comparison, digits = 4, row.names = FALSE)
+
 summary(dynamic)
+print(dynamic_comparison, digits = 4, row.names = FALSE)
+print(dynamic_overall_comparison, digits = 4, row.names = FALSE)
 ggdid(dynamic)
 
 dynamic_balanced <- aggte(
@@ -109,7 +218,47 @@ dynamic_balanced <- aggte(
   min_e = -3, max_e = 3,
   balance_e = 3
 )
+
+balanced_groups <- sort(unique(
+  data$G[data$G > 0 & TT - data$G >= 3]
+))
+true_event_balanced <- aggregate(
+  tau ~ event_time,
+  data = data[data$G %in% balanced_groups, ],
+  FUN = mean
+)
+names(true_event_balanced)[names(true_event_balanced) == "tau"] <-
+  "true_effect"
+
+dynamic_balanced_comparison <- data.frame(
+  event_time = dynamic_balanced$egt,
+  estimate = dynamic_balanced$att.egt
+)
+dynamic_balanced_comparison$true_effect <-
+  true_event_balanced$true_effect[
+    match(
+      dynamic_balanced_comparison$event_time,
+      true_event_balanced$event_time
+    )
+  ]
+dynamic_balanced_comparison$estimation_error <-
+  dynamic_balanced_comparison$estimate -
+  dynamic_balanced_comparison$true_effect
+
+dynamic_balanced_overall_comparison <- data.frame(
+  estimand = "Balanced dynamic overall ATT",
+  estimate = dynamic_balanced$overall.att,
+  true_effect = mean(dynamic_balanced_comparison$true_effect[
+    dynamic_balanced_comparison$event_time >= 0
+  ])
+)
+dynamic_balanced_overall_comparison$estimation_error <-
+  dynamic_balanced_overall_comparison$estimate -
+  dynamic_balanced_overall_comparison$true_effect
+
 summary(dynamic_balanced)
+print(dynamic_balanced_comparison, digits = 4, row.names = FALSE)
+print(dynamic_balanced_overall_comparison, digits = 4, row.names = FALSE)
 ggdid(dynamic_balanced)
 ```
 
@@ -135,7 +284,67 @@ sa_event <- feols(
   data = data, cluster = ~ id
 )
 
-iplot(list("Conventional TWFE" = twfe_event,
-           "Sun--Abraham" = sa_event),
-      ref.line = -1, main = "Event-study estimates")
+event_study_truth <- true_event[order(true_event$event_time), ]
+print(event_study_truth, digits = 4, row.names = FALSE)
+
+event_models <- list(
+  "Conventional TWFE" = twfe_event,
+  "Sun-Abraham" = sa_event
+)
+plot_cols <- c("#0072B2", "#D55E00", "#009E73")
+plot_pch <- c(16, 17, 15)
+
+# Read the parameters chosen by iplot so its confidence limits include truth.
+plot_info <- iplot(
+  objects = event_models,
+  only.params = TRUE,
+  sep = 0.15
+)
+event_labels <- unique(suppressWarnings(
+  as.numeric(as.character(plot_info$labels))
+))
+event_labels <- event_labels[is.finite(event_labels)]
+truth_in_plot <- event_study_truth[
+  event_study_truth$event_time %in% event_labels,
+]
+truth_in_plot <- truth_in_plot[order(truth_in_plot$event_time), ]
+
+plot_ylim <- range(
+  plot_info$prms$ci_low,
+  plot_info$prms$ci_high,
+  truth_in_plot$true_effect,
+  na.rm = TRUE
+)
+plot_pad <- 0.05 * diff(plot_ylim)
+
+iplot(
+  objects = event_models,
+  ref.line = -1,
+  col = plot_cols[1:2],
+  pch = plot_pch[1:2],
+  pt.join = TRUE,
+  sep = 0.15,
+  ylim = plot_ylim + c(-plot_pad, plot_pad),
+  xlab = "Event time",
+  ylab = "Treatment effect",
+  main = "TWFE and Sun-Abraham event-study estimates"
+)
+
+lines(
+  truth_in_plot$event_time, truth_in_plot$true_effect,
+  col = plot_cols[3], lty = 2, lwd = 2
+)
+points(
+  truth_in_plot$event_time, truth_in_plot$true_effect,
+  col = plot_cols[3], pch = plot_pch[3]
+)
+legend(
+  "topleft",
+  legend = c("Conventional TWFE", "Sun-Abraham", "True ATT(e)"),
+  col = plot_cols,
+  pch = plot_pch,
+  lty = c(1, 1, 2),
+  lwd = c(1, 1, 2),
+  bty = "n"
+)
 ```
