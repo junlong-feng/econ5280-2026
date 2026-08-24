@@ -16,74 +16,28 @@ webr:
     - scales
 ---
 
+## Bernoulli Random Variable
+
+```{webr}
+set.seed(5280)
+rbinom(n = 10, size = 1, prob = 0.5)
+```
+
 ## Three Normal Density Curves
 
 Plots normal densities with different means and standard deviations on one graph.
 
 ```{webr}
-library(ggplot2)
-library(latex2exp)
-library(ggpointdensity)
-
-## Normal densities
-x=seq(-7,7,length=100)
-f1=dnorm(x,mean=0,sd=1)
-f2=dnorm(x,mean=2,sd=1)
-f3=dnorm(x,mean=0,sd=2)
-
-## Put the three density function values and x into a dataset
-data=data.frame(f1=f1,f2=f2,f3=f3,x=x)
-
-## Plot the three densities in one graph.
-p=ggplot(data=data)+
-  geom_line(aes(x=x,y=f1,colour="N(0,1)"))+
-  geom_line(aes(x=x,y=f2,colour="N(2,1)"),linetype="dashed")+
-  geom_line(aes(x=x,y=f3,colour="N(0,4)"),linetype="dotdash")+
-  xlab('x')+
-  ylab('density')+
-  labs(colour="Legend")+
-  theme(
-    legend.position = c(.95, .95),
-    legend.justification = c("right", "top"),
-    legend.box.just = "right",
-    legend.margin = margin(6, 6, 6, 6)
-  )
-p
+x <- seq(-7, 7, length.out = 400)
+plot(x, dnorm(x, 0, 1), type = "l", lwd = 2,
+     xlab = "x", ylab = "density", ylim = c(0, 0.42))
+lines(x, dnorm(x, 2, 1), lty = 2, lwd = 2, col = "steelblue")
+lines(x, dnorm(x, 0, 2), lty = 3, lwd = 2, col = "firebrick")
+legend("topright", c("N(0,1)", "N(2,1)", "N(0,4)"),
+       lty = 1:3, lwd = 2,
+       col = c("black", "steelblue", "firebrick"), bty = "n")
 ```
 
-## Joint-Normal Density Surfaces
-
-Creates three-dimensional density surfaces for independent, positively correlated, and negatively correlated bivariate normals.
-
-```{webr}
-library(ggplot2)
-library(mvtnorm)
-library(plotly)
-library(latex2exp)
-library(ggpointdensity)
-library(weights)
-
-x=seq(-4,4,length=100)
-y=seq(-4,4,length=100)
-## A joint normal distribution can be fully characterized by mean, variance, and covariances
-sigma_pos=matrix(c(1,0.5,0.5,1),ncol=2) # X and Y positively correlated
-sigma_neg=matrix(c(1,-0.5,-0.5,1),ncol=2) # X and Y negatively correlated
-sigma_ind=matrix(c(1,0,0,1),ncol=2) # X and Y independent
-mu=c(0,0) # mean
-
-f_pos=function(x,y){dmvnorm(cbind(x,y),mu,sigma_pos)}
-f_neg=function(x,y){dmvnorm(cbind(x,y),mu,sigma_neg)}
-f_ind=function(x,y){dmvnorm(cbind(x,y),mu,sigma_ind)}
-z_pos=outer(x,y,f_pos)
-z_neg=outer(x,y,f_neg)
-z_ind=outer(x,y,f_ind)
-pp_pos=plot_ly(x=x,y=y,z=z_pos)%>% add_surface()
-pp_neg=plot_ly(x=x,y=y,z=z_neg)%>% add_surface()
-pp_ind=plot_ly(x=x,y=y,z=z_ind)%>% add_surface()
-pp_ind
-# pp_neg
-# pp_pos
-```
 
 ## Sample Averages and Normal Approximation
 

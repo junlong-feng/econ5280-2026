@@ -16,14 +16,19 @@ webr:
 Simulates a simple regression and estimates its coefficients using both the matrix formula and lm().
 
 ```{webr}
-### Verify that the function lm in R gives the same estimates as the formula
-n=100; e=rnorm(n,0,1); x=rnorm(n,0,1); y=0.5+2*x+e; cons=rep(1,100)
-X=cbind(cons,x); y=as.matrix(y,n,1)
-## Method 1: Use formula
-bhat=solve(t(X)%*%X)%*%(t(X)%*%y)
-## Method 2: Use R routine
-model=lm(y~x)
-summary(model)
+set.seed(5280)
+n <- 100
+x <- rnorm(n)
+e <- rnorm(n)
+y <- 0.5 + 2 * x + e
+X <- cbind(1, x)
+
+# Matrix formula
+bhat <- solve(crossprod(X), crossprod(X, y))
+bhat
+
+# R's regression routine
+coef(lm(y ~ x))
 ```
 
 ## Monte Carlo Check of OLS Unbiasedness
@@ -31,15 +36,15 @@ summary(model)
 Repeats the regression 500 times and averages the estimated intercept and slope.
 
 ```{webr}
-### Verify Unbiasedness
-n=100; nrep=500 # Create nrep samples and in each sample estimate beta=(0.5,2).
-bhat=matrix(0,2,nrep)
-for (sim in 1:nrep){
-e=rnorm(n,0,1); x=rnorm(n,0,1); y=0.5+2*x+e; cons=rep(1,n)
-X=cbind(cons,x); y=as.matrix(y,n,1)
-bhat[,sim]=solve(t(X)%*%X)%*%(t(X)%*%y)
-}
-rowMeans(bhat) # Take average which mimics E(bhat).
+set.seed(5280)
+n <- 100
+B <- 500
+bhat <- replicate(B, {
+  x <- rnorm(n)
+  y <- 0.5 + 2 * x + rnorm(n)
+  coef(lm(y ~ x))
+})
+rowMeans(bhat)
 ```
 
 ## OLS Error at Different Sample Sizes
@@ -60,33 +65,45 @@ diff[,sim]=solve(t(X)%*%X)%*%(t(X)%*%y)-matrix(c(0.5,2),2,1) # difference betwee
 colSums(abs(diff))
 ```
 
-## HC0-Robust Inference
+## Robust Standard Error
 
 Fits a two-regressor model and reports an HC0-robust test for the coefficient on x1.
 
 ```{webr}
 library(sandwich) # library to calculate heteroscedastic robust standard error
 library(lmtest)
-# DGP
-n=500; e=rnorm(n,0,1); x1=rnorm(n,0,1); x2=rnorm(n,0,1); y=0.5+x1+x2+e; cons=rep(1,n) 
-model=lm(y~x1+x2)
-## Get Hetero-robust variance matrix. Any of HC0-HC3 is okay. HC0 and 1 are commonly used.
-cov=vcovHC(model,type="HC0")
-## First test the coefficient on x1 is 0 using t-test
-ttest1=model$coefficient[2]/sqrt(cov[2,2]) # denominator is the corresponding se.
-## Or you can use command coeftest:
-coeftest(model,vcov.=vcovHC(model,type="HC0"))
+set.seed(5280)
+
+n <- 500
+x1 <- rnorm(n)
+x2 <- rnorm(n)
+y <- 0.5 + x1 + x2 + rnorm(n, sd = 0.5 + abs(x1))
+fit <- lm(y ~ x1 + x2)
+
+# HC1 heteroskedasticity-robust covariance matrix and coefficient table
+V_HC1 <- vcovHC(fit, type = "HC1")
+coeftest(fit, vcov. = V_HC1)
 ```
 
-## HC1-Robust Confidence Interval
 
-Simulates heteroskedastic outcomes and reports an HC1 coefficient table and 95% confidence interval for x1.
+## Inference
+
+Fits a two-regressor model and verify the size and power of t test and the coverage probability of confidence interval.
 
 ```{webr}
 library(sandwich)
 library(lmtest)
 
 set.seed(5280)
+
+simu=1000
+b_h0_1=1
+b_h0_2=0
+rej_1=0
+rej_2=0
+cover=0
+
+for (j in 1:simu){
 n <- 500
 x1 <- rnorm(n)
 x2 <- rnorm(n)
@@ -97,8 +114,27 @@ fit <- lm(y ~ x1 + x2)
 V_HC1 <- vcovHC(fit, type = "HC1")
 coeftest(fit, vcov. = V_HC1)
 
-# A 95% robust confidence interval for the coefficient on x1
+# T test statistic
 b1 <- coef(fit)["x1"]
 se1 <- sqrt(V_HC1["x1", "x1"])
-b1 + c(-1, 1) * qnorm(0.975) * se1
+Tn_1=(b1-b_h0_1)/se1
+Tn_2=(b1-b_h0_2)/se1
+
+# Size
+rej_1[j]=(abs(Tn_1)>qnorm(0.975))
+
+# Power
+rej_2[j]=(abs(Tn_2)>qnorm(0.975))
+
+# 0.95 Confidence interval
+CI_lower=b1 - qnorm(0.975) * se1
+CI_upper=b1 + qnorm(0.975) * se1
+
+cover[j]=(1<=CI_upper)*(1>=CI_lower)
+}
+mean(rej_1)
+mean(rej_2)
+mean(cover)
 ```
+
+

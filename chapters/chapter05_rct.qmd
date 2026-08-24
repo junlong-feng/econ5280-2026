@@ -46,20 +46,7 @@ model1=lm(Y~D+age+polviews+income+educ+marital+sex,data)
 coeftest(model1,vcov=vcovHC(model1,type='HC2'))
 ```
 
-## Fully Interacted Welfare Estimate
 
-Centers the six covariates and fits a treatment-by-covariate interacted regression.
-
-```{webr}
-covariates <- c("age", "polviews", "income", "educ", "marital", "sex")
-data_centered <- data
-data_centered[covariates] <- lapply(data[covariates], function(x) x - mean(x))
-model_interacted <- lm(
-  Y~D*(age+polviews+income+educ+marital+sex),
-  data=data_centered
-)
-coeftest(model_interacted,vcov=vcovHC(model_interacted,type='HC2'))
-```
 
 ## Monte Carlo: Difference in Means versus Adjustment
 
@@ -99,24 +86,4 @@ var(tau_dm)
 var(tau_ols)
 ```
 
-## Monte Carlo: Fully Interacted Adjustment
 
-Repeats the simulation with centered treatment-by-covariate interactions and reports the estimate's mean and variance.
-
-```{webr}
-# Added fully interacted regression adjustment
-set.seed(5280)
-tau_interacted=0
-
-for (b in 1:B){
-		w=rnorm(n,2,1)
-		e=rnorm(n,0,1)
-		d=(rnorm(n,0,1)>0)
-		y=1+d+w^2*d+exp(w)+e
-		w_centered=w-mean(w)
-		model3=lm(y~d*w_centered)
-		tau_interacted[b]=model3$coefficients[2]
-}
-mean(tau_interacted)
-var(tau_interacted)
-```
