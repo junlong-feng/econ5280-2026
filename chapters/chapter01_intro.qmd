@@ -12,17 +12,14 @@ format:
 Simulates four observations of income, degree status, and age, then stores them as both a matrix and a data frame.
 
 ```{webr}
-set.seed(5280) # Set seed for replication
-n=4   # Sample size. Choose a small one to view data easily.
-Y=exp(rnorm(n,0,1)) # generate some fake income data.
-X1=rbinom(n,1,0.5) # 1=having an MA degree. 0=no MA degree
-X2=sample(22:30, n, replace=T) # generate integers between 22 and 30 for age
+set.seed(5280)                 # make the demonstration reproducible
+n <- 4
+Y  <- exp(rnorm(n))            # simulated monthly income
+X1 <- rbinom(n, 1, 0.5)        # 1 = master's degree
+X2 <- sample(22:30, n, replace = TRUE)
 
-# Option 1: organize the variables as a matrix.
-data1=cbind(Y,X1,X2) 
-# Option 2: organize the variables as a data set
-data2=data.frame(income=Y,MA=X1,age=X2)  
-
-View(data1)
-View(data2)
+data_matrix <- cbind(Y, X1, X2)
+data_frame  <- data.frame(income = Y, MA = X1, age = X2)
+data_matrix
+data_frame
 ```
