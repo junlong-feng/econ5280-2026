@@ -15,7 +15,7 @@ webr:
     - lmtest
 ---
 
-## Welfare Experiment: Difference in Means and OLS
+## Welfare Experiment: Difference-in-Means
 
 Loads the welfare survey experiment and estimates the wording effect by difference-in-means.
 
@@ -39,7 +39,7 @@ tau_dm=mean(Y[D==1])-mean(Y[D==0])
 tau_dm
 ```
 
-## Covariate-Adjusted Welfare Estimate
+## Regression-Adjusted Welfare Estimate
 
 Reestimates the welfare wording effect after adding six observed covariates.
 
@@ -51,9 +51,9 @@ coeftest(model1,vcov=vcovHC(model1,type='HC2'))
 
 
 
-## Monte Carlo: Difference in Means versus Adjustment
+## Monte Carlo: Difference-in-Means versus Regression Adjustment
 
-Simulates 100 samples and compares the means and variances of unadjusted and covariate-adjusted estimates.
+Simulates 500 samples and compares the means and variances of DM and RA estimates.
 
 ```{webr}
 set.seed(5280)
