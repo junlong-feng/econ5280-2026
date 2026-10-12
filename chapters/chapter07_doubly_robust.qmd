@@ -15,7 +15,7 @@ webr:
 
 Simulates nonlinear treatment effects and compares two robust OLS estimates with the true ATE of 2.
 
-```{r}
+```{webr}
 library(lmtest)
 library(sandwich)
 
