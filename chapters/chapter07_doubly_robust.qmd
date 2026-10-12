@@ -26,7 +26,7 @@ set.seed(5280)
 n <- 5000
 W <- rnorm(n)
 V <- rnorm(n)
-D <- (W + V > 0) ## So the treatment satisfies unconfoundedness but not complete randomization
+D <- as.integer(W + V > 0) ## So the treatment satisfies unconfoundedness but not complete randomization
 epsilon <- rnorm(n)
 Y <- 1 + D + W + D * W^2 + sin(W) + epsilon ## ATE=2
 
