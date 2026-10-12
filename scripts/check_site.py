@@ -26,8 +26,11 @@ def check_page(entry: dict) -> int:
     text = path.read_text(encoding="utf-8")
     blocks = CODE_RE.findall(text)
 
-    expected_engine = "webr" if entry["runtime"] == "webr" else "r"
-    if any(engine != expected_engine for engine, _ in blocks):
+    if entry["runtime"] == "mixed":
+        allowed_engines = {"webr", "r"}
+    else:
+        allowed_engines = {"webr" if entry["runtime"] == "webr" else "r"}
+    if any(engine not in allowed_engines for engine, _ in blocks):
         fail(f"{entry['file']} uses the wrong R runtime fence")
 
     return len(blocks)
