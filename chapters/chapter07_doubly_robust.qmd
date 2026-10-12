@@ -5,7 +5,6 @@ format:
   live-html:
     toc: true
     toc-depth: 2
-engine: markdown
 webr:
   packages:
     - sandwich
