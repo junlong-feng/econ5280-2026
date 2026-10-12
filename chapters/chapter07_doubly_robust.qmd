@@ -37,7 +37,7 @@ coeftest(fit_long, vcov. = vcovHC(fit_long, type = "HC2"))["D", ]
 
 Fits a causal forest and reports its AIPW estimate of the simulated ATE.
 
-```{r}
+```{r} 
 library(grf)
 ### Generate data. 
 set.seed(5280)
