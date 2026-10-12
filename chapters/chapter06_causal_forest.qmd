@@ -19,40 +19,33 @@ Simulates heterogeneous effects and plots estimated CATEs, pointwise intervals, 
 ```{r}
 library(grf)
 library(DiagrammeR)
-### Generate data. You do not need to run these if a dataset is already given. 
-n <- 2000      
-p <- 10
-W <- matrix(rnorm(n * p), n, p)
+
+set.seed(5280)
+n <- 3000
+p <- 12
+W <- matrix(rnorm(n * p), nrow = n, ncol = p)
 D <- rbinom(n, 1, 0.4 + 0.2 * (W[, 1] > 0))
 Y <- pmax(W[, 1], 0) * D + W[, 2] + pmin(W[, 3], 0) + rnorm(n)
-data=data.frame(Y,D,W)
 
-## Generate values of interest for w
-W.test <- matrix(0, 101, p)
-W.test[, 1] <- seq(-2, 2, length.out = 101)
+W_test <- matrix(0, nrow = 101, ncol = p)
+W_test[, 1] <- seq(-2, 2, length.out = 101)
 
-### Build a causal forest.
-tau.forest <- causal_forest(W, Y, D) # Put regressors
-tree <- get_tree(tau.forest, 1)
-plot(tree) # visualize the first tree in the forest
 
-### Estimate CATE at specified w values using the forest
-tau.hat <- predict(tau.forest, W.test) 
-plot(W.test[, 1], tau.hat$predictions, ylim = range(tau.hat$predictions, 0, 2), 
-     xlab = "W1", ylab = "CATE", type = "l") # estimated CATE
-lines(W.test[, 1], pmax(0, W.test[, 1]), col = 2, lty = 2) # true CATE
+forest_full <- causal_forest(W, Y, D, num.trees = 4000)
+plot(get_tree(forest_full, 1)) # visualize one of the 4000 trees. Unnecessary for estimation.
 
-# Estimate treatment effects with pointwise confidence intervals
-tau.forest <- causal_forest(W, Y, D, num.trees = 4000)
-tau.hat <- predict(tau.forest, W.test, estimate.variance = TRUE)
-sigma.hat <- sqrt(tau.hat$variance.estimates)
-plot(W.test[, 1], tau.hat$predictions, ylim =
-       range(tau.hat$predictions + 1.96 * sigma.hat, 
-             tau.hat$predictions - 1.96 * sigma.hat, 0, 2), 
-     xlab = "W1", ylab = "CATE", type = "l")
-lines(W.test[, 1], tau.hat$predictions + 1.96 * sigma.hat, col = 1, lty = 2)
-lines(W.test[, 1], tau.hat$predictions - 1.96 * sigma.hat, col = 1, lty = 2)
-lines(W.test[, 1], pmax(0, W.test[, 1]), col = 2, lty = 1)
+pred <- predict(forest_full, W_test, estimate.variance = TRUE)
+se <- sqrt(pred$variance.estimates)
+
+plot(W_test[, 1], pred$predictions,
+     ylim = range(pred$predictions - 1.96 * se,
+                  pred$predictions + 1.96 * se, 0, 2),
+     xlab = expression(W[1]), ylab = "CATE", type = "l")
+lines(W_test[, 1], pred$predictions + 1.96 * se, lty = 2)
+lines(W_test[, 1], pred$predictions - 1.96 * se, lty = 2)
+lines(W_test[, 1], pmax(W_test[, 1], 0), col = 2)
+legend("topleft", c("forest", "95% pointwise interval", "truth"),
+       lty = c(1, 2, 1), col = c(1, 1, 2), bty = "n")
 ```
 
 ## Welfare CATEs by Education
@@ -60,29 +53,28 @@ lines(W.test[, 1], pmax(0, W.test[, 1]), col = 2, lty = 1)
 Fits a causal forest to welfare-small.csv and plots CATE estimates across education at age 30.
 
 ```{r}
-data <- read.csv("data/welfare-small.csv")
-n <- nrow(data)
-Y=as.numeric(data$Y)
-D=as.numeric(data$D)
-W=cbind(data$age,data$educ)
+library(grf)
+library(DiagrammeR)
+gss <- read.csv("/Users/junlong/Downloads/welfare-small.csv")
+set.seed(5280)
+n <- nrow(gss)
+Y <- as.matrix(gss$Y,n,1)
+D <- as.matrix(gss$D,n,1)
+W <- cbind(gss$age, gss$educ)
 
+## Values of w
+W_test <- cbind(30, seq(min(gss$educ), max(gss$educ), by = 1))
 
-## Generate values of interest for w
-W.test <- cbind(30,seq(min(data$educ),max(data$educ),by=1))
+forest_gss <- causal_forest(W, Y, D, num.trees = 4000)
+pred_gss <- predict(forest_gss, W_test, estimate.variance = TRUE)
+se_gss <- sqrt(pred_gss$variance.estimates)
 
-### Build a causal forest.
-tau.forest <- causal_forest(W, Y, D) # Put regressors
-tree <- get_tree(tau.forest, 1)
-plot(tree) # visualize the first tree in the forest
-
-# Estimate treatment effects with pointwise confidence intervals
-tau.forest <- causal_forest(W, Y, D, num.trees = 4000)
-tau.hat <- predict(tau.forest, W.test, estimate.variance = TRUE)
-sigma.hat <- sqrt(tau.hat$variance.estimates)
-plot(W.test[, 2], tau.hat$predictions, ylim =
-       range(tau.hat$predictions + 1.96 * sigma.hat, 
-             tau.hat$predictions - 1.96 * sigma.hat), 
-     xlab = "educ", ylab = "CATE", type = "l")
-lines(W.test[, 2], tau.hat$predictions + 1.96 * sigma.hat, col = 1, lty = 2)
-lines(W.test[, 2], tau.hat$predictions - 1.96 * sigma.hat, col = 1, lty = 2)
+plot(W_test[, 2], pred_gss$predictions,
+     ylim = range(pred_gss$predictions - 1.96 * se_gss,
+                  pred_gss$predictions + 1.96 * se_gss),
+     xlab = "Education", ylab = "Estimated CATE", type = "l")
+lines(W_test[, 2], pred_gss$predictions + 1.96 * se_gss, lty = 2)
+lines(W_test[, 2], pred_gss$predictions - 1.96 * se_gss, lty = 2)
+legend("topright", c("forest", "95% pointwise interval"),
+       lty = c(1, 2), col = c(1, 1), bty = "n")
 ```

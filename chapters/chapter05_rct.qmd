@@ -15,9 +15,9 @@ webr:
     - lmtest
 ---
 
-## Welfare Experiment: Difference in Means and OLS
+## Welfare Experiment: Difference-in-Means
 
-Loads the welfare survey experiment and estimates the wording effect by difference in means and OLS.
+Loads the welfare survey experiment and estimates the wording effect by difference-in-means.
 
 ```{webr}
 library(lmtest)
@@ -26,17 +26,20 @@ library(sandwich)
 data <- read.csv("data/welfare-small.csv")
 n <- nrow(data)
 
-# The difference-in-means estimator
+
+
+# The DM estimator via OLS
+model=lm(Y~D)
+coeftest(model,vcov=vcovHC(model,type='HC2'))
+
+# Directly computing the subsample mean difference.
 Y=data$Y
 D=data$D
 tau_dm=mean(Y[D==1])-mean(Y[D==0])
-
-# The least-squares estimator
-model=lm(Y~D)
-coeftest(model,vcov=vcovHC(model,type='HC2'))
+tau_dm
 ```
 
-## Covariate-Adjusted Welfare Estimate
+## Regression-Adjusted Welfare Estimate
 
 Reestimates the welfare wording effect after adding six observed covariates.
 
@@ -48,42 +51,30 @@ coeftest(model1,vcov=vcovHC(model1,type='HC2'))
 
 
 
-## Monte Carlo: Difference in Means versus Adjustment
+## Monte Carlo: Difference-in-Means versus Regression Adjustment
 
-Simulates 100 samples and compares the means and variances of unadjusted and covariate-adjusted estimates.
+Simulates 500 samples and compares the means and variances of DM and RA estimates.
 
 ```{webr}
-library(lmtest)
-library(sandwich)
-# Fix sample size = 1000
-n=1000
-
-# 100 simulation replications
-B=100
-
-# for replication
 set.seed(5280)
+n <- 1000
+B <- 500
+tau_dm <- numeric(B)
+tau_ra <- numeric(B)
 
-# Store the estimates
-tau_dm=0
-tau_ols=0
+for (b in seq_len(B)) {
+  W <- rnorm(n, 2, 1)
+  D <- rbinom(n, 1, 0.5)
+  e <- rnorm(n)
+  Y <- 1 + D + W^2 * D + exp(W) + e
 
-# Loop over all simulated samples
-for (b in 1:B){
-		w=rnorm(n,2,1) # create W; here the mean is not 0
-		e=rnorm(n,0,1) # create the error term
-		d=(rnorm(n,0,1)>0) # create a binary treatment
-		y=1+d+w^2*d+exp(w)+e # true model. W does not enter the model linearly
-		model1=lm(y~d) # dm estimator
-		tau_dm[b]=model1$coefficients[2]
-		model2=lm(y~d+w) # regression adjustment
-		tau_ols[b]=model2$coefficients[2]
+  tau_dm[b] <- coef(lm(Y ~ D))["D"]
+  Wc <- W - mean(W)
+  tau_ra[b] <- coef(lm(Y ~ D * Wc))["D"]
 }
-# examine the mean and variance
-mean(tau_dm)
-mean(tau_ols)
-var(tau_dm)
-var(tau_ols)
+
+c(mean_dm = mean(tau_dm), mean_ra = mean(tau_ra))
+c(var_dm = var(tau_dm), var_ra = var(tau_ra))
 ```
 
 
