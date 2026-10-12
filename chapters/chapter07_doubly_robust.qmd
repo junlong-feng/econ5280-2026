@@ -5,8 +5,6 @@ format:
   live-html:
     toc: true
     toc-depth: 2
-execute:
-  enabled: false
 engine: markdown
 ---
 
@@ -17,20 +15,19 @@ Simulates nonlinear treatment effects and compares two robust OLS estimates with
 ```{r}
 library(lmtest)
 library(sandwich)
-set.seed(5280)
-## DGP
-n=5000
-w=rnorm(n,0,1)
-v=rnorm(n,0,1)
-d=((w+v)>0) ## So the treatment satisfies unconfoundedness but not complete randomization
-e=rnorm(n,0,1)
-y=1+d+w+d*w^2+sin(w)+e  ## So, ATE=2
 
-## OLS
-model1=lm(y~d)
-model2=lm(y~d+w)
-coeftest(model1,vcov.=vcovHC(model1,type="HC0"))
-coeftest(model2,vcov.=vcovHC(model2,type="HC0"))
+set.seed(5280)
+n <- 5000
+W <- rnorm(n)
+V <- rnorm(n)
+D <- (W + V > 0) ## So the treatment satisfies unconfoundedness but not complete randomization
+epsilon <- rnorm(n)
+Y <- 1 + D + W + D * W^2 + sin(W) + epsilon ## ATE=2
+
+fit_short <- lm(Y ~ D)
+fit_longer <- lm(Y ~ D + W)
+coeftest(fit_short, vcov. = vcovHC(fit_short, type = "HC2"))["D", ]
+coeftest(fit_linear, vcov. = vcovHC(fit_long, type = "HC2"))["D", ]
 ```
 
 ## Causal-Forest AIPW Estimate
@@ -39,19 +36,17 @@ Fits a causal forest and reports its AIPW estimate of the simulated ATE.
 
 ```{r}
 library(grf)
-library(DiagrammeR)
 ### Generate data. 
 set.seed(5280)
-n <- 2000      
-p <- 10
+n <- 3000      
+p <- 12
 W <- matrix(rnorm(n * p), n, p)
 D <- rbinom(n, 1, 0.4 + 0.2 * (W[, 1] > 0))
 Y <- pmax(W[, 1], 0) * D + W[, 2] + pmin(W[, 3], 0) + rnorm(n)
-data=data.frame(Y,D,W)
 
 # Plant a forest
-tau.forest <- causal_forest(W, Y, D, num.trees = 4000)
+forest <- causal_forest(W, Y, D, num.trees = 4000)
 
 # Estimate the ATE
-average_treatment_effect(tau.forest,target.sample="all",method="AIPW")
+average_treatment_effect(forest,target.sample="all",method="AIPW")
 ```
