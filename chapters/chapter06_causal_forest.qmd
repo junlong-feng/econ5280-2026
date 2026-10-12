@@ -53,29 +53,28 @@ legend("topleft", c("forest", "95% pointwise interval", "truth"),
 Fits a causal forest to welfare-small.csv and plots CATE estimates across education at age 30.
 
 ```{r}
-data <- read.csv("data/welfare-small.csv")
-n <- nrow(data)
-Y=as.numeric(data$Y)
-D=as.numeric(data$D)
-W=cbind(data$age,data$educ)
+library(grf)
+library(DiagrammeR)
+gss <- read.csv("/Users/junlong/Downloads/welfare-small.csv")
+set.seed(5280)
+n <- nrow(gss)
+Y <- as.matrix(gss$Y,n,1)
+D <- as.matrix(gss$D,n,1)
+W <- cbind(gss$age, gss$educ)
 
+## Values of w
+W_test <- cbind(30, seq(min(gss$educ), max(gss$educ), by = 1))
 
-## Generate values of interest for w
-W.test <- cbind(30,seq(min(data$educ),max(data$educ),by=1))
+forest_gss <- causal_forest(W, Y, D, num.trees = 4000)
+pred_gss <- predict(forest_gss, W_test, estimate.variance = TRUE)
+se_gss <- sqrt(pred_gss$variance.estimates)
 
-### Build a causal forest.
-tau.forest <- causal_forest(W, Y, D) # Put regressors
-tree <- get_tree(tau.forest, 1)
-plot(tree) # visualize the first tree in the forest
-
-# Estimate treatment effects with pointwise confidence intervals
-tau.forest <- causal_forest(W, Y, D, num.trees = 4000)
-tau.hat <- predict(tau.forest, W.test, estimate.variance = TRUE)
-sigma.hat <- sqrt(tau.hat$variance.estimates)
-plot(W.test[, 2], tau.hat$predictions, ylim =
-       range(tau.hat$predictions + 1.96 * sigma.hat, 
-             tau.hat$predictions - 1.96 * sigma.hat), 
-     xlab = "educ", ylab = "CATE", type = "l")
-lines(W.test[, 2], tau.hat$predictions + 1.96 * sigma.hat, col = 1, lty = 2)
-lines(W.test[, 2], tau.hat$predictions - 1.96 * sigma.hat, col = 1, lty = 2)
+plot(W_test[, 2], pred_gss$predictions,
+     ylim = range(pred_gss$predictions - 1.96 * se_gss,
+                  pred_gss$predictions + 1.96 * se_gss),
+     xlab = "Education", ylab = "Estimated CATE", type = "l")
+lines(W_test[, 2], pred_gss$predictions + 1.96 * se_gss, lty = 2)
+lines(W_test[, 2], pred_gss$predictions - 1.96 * se_gss, lty = 2)
+legend("topright", c("forest", "95% pointwise interval"),
+       lty = c(1, 2), col = c(1, 1), bty = "n")
 ```
