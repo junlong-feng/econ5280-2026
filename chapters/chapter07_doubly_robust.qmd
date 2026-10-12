@@ -7,8 +7,11 @@ format:
     toc-depth: 2
 webr:
   packages:
-    - sandwich
     - lmtest
+    - sandwich
+execute:
+  enabled: false
+engine: markdown
 ---
 
 ## OLS and the Simulated ATE
