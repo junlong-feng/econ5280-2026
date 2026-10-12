@@ -29,9 +29,9 @@ epsilon <- rnorm(n)
 Y <- 1 + D + W + D * W^2 + sin(W) + epsilon ## ATE=2
 
 fit_short <- lm(Y ~ D)
-fit_longer <- lm(Y ~ D + W)
+fit_long <- lm(Y ~ D + W)
 coeftest(fit_short, vcov. = vcovHC(fit_short, type = "HC2"))["D", ]
-coeftest(fit_linear, vcov. = vcovHC(fit_long, type = "HC2"))["D", ]
+coeftest(fit_long, vcov. = vcovHC(fit_long, type = "HC2"))["D", ]
 ```
 
 ## Causal-Forest AIPW Estimate
