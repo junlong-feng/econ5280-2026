@@ -41,6 +41,9 @@ Loads house.csv and estimates the electoral discontinuity with local-linear regr
 ```{webr}
 library(rdd)
 data=read.csv("house.csv")
+str(data)
+summary(data)
+
 y=data$y
 x=data$x
 model=RDestimate(y~x)
