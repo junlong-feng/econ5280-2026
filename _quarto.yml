@@ -21,8 +21,8 @@ website:
           - chapters/chapter07_doubly_robust.qmd
           - chapters/chapter08_rd.qmd
           - chapters/chapter09_late.qmd
-          - chapters/chapter10_nn.qmd
-          - chapters/chapter11_did.qmd
+         # - chapters/chapter10_nn.qmd
+         # - chapters/chapter11_did.qmd
 
 format:
   live-html:
