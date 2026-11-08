@@ -75,22 +75,22 @@
         "chapters/chapter09_late.md"
       ],
       "runtime": "webr"
+    },
+    {
+      "file": "chapters/chapter10_nn.qmd",
+      "title": "Chapter 10: Neural Networks",
+      "sources": [
+        "chapters/chapter10_nn.md"
+      ],
+      "runtime": "webr"
+    },
+    {
+      "file": "chapters/chapter11_did.qmd",
+      "title": "Chapter 11: Difference-in-Differences and Event Studies",
+      "sources": [
+        "chapters/chapter11_did.md"
+      ],
+      "runtime": "native"
     }
-    // {
-    //   "file": "chapters/chapter10_nn.qmd",
-    //   "title": "Chapter 10: Neural Networks",
-    //   "sources": [
-    //     "chapters/chapter10_nn.md"
-    //   ],
-    //   "runtime": "webr"
-    // },
-    // {
-    //   "file": "chapters/chapter11_did.qmd",
-    //   "title": "Chapter 11: Difference-in-Differences and Event Studies",
-    //   "sources": [
-    //     "chapters/chapter11_did.md"
-    //   ],
-    //   "runtime": "native"
-    // }
   ]
 }

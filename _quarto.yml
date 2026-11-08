@@ -1,7 +1,11 @@
 project:
   type: website
   output-dir: _site
-
+  render:
+    - "*.qmd"
+    - "chapters/*.qmd"
+    - "!chapters/chapter10_nn.qmd"
+    - "!chapters/chapter11_did.qmd"
 website:
   title: "ECON 5280: Applied Econometrics"
   page-navigation: true
