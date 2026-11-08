@@ -9,4 +9,4 @@ format:
 
 This companion contains the numerical examples from the lecture notes, each with a short description.
 
-Most examples run directly in the browser. Chapters 6, 7, and 11 use the repository's GitHub Codespace.
+All examples run directly in the browser except for some of those in Chapters 6 and 7.
